@@ -297,7 +297,7 @@ class UIInet(nn.Module):
             predictions[i] = out.reshape(-1).data.numpy()
         return predictions
 
-class PatchDiscriminator1(nn.Module):
+class Cooccnet(nn.Module):
     def __init__(self, users_num, items_num, embedding_size=16, out_channels=64, kernel_size=2, stride=1, padding=0, n_class=1):
         super(Net, self).__init__()
         self.embedding_size, self.kernel_size, self.items_num, self.users_num = embedding_size, kernel_size, items_num, users_num
