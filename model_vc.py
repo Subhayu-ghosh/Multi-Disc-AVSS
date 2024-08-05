@@ -891,7 +891,9 @@ class Generator(nn.Module):
             self.opt_encoder = torch.optim.Adam(self.encoder.parameters(), lr=lr)
             self.opt_decoder = torch.optim.Adam(itertools.chain(self.decoder.parameters(), self.postnet.parameters()), lr=lr)
             if discriminator:
-                self.opt_dis = torch.optim.Adam(self.dis.parameters(), lr=lr)
+                self.opt_dis1 = torch.optim.Adam(self.dis1.parameters(), lr=lr)
+                self.opt_dis2 = torch.optim.Adam(self.dis2.parameters(), lr=lr)
+                self.opt_dis3 = torch.optim.Adam(self.dis3.parameters(), lr=lr)
             self.opt_vocoder = torch.optim.Adam(self.vocoder.parameters(), lr=hparams.voc_lr)
             self.vocoder_loss_func = F.cross_entropy # Only for RAW
 
