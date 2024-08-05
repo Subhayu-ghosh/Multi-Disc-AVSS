@@ -854,10 +854,12 @@ class Generator(nn.Module):
         self.postnet = Postnet(num_mel=dim_spec)
 
         if discriminator:
-            self.dis = PatchDiscriminator1(n_class=num_speakers)
-            self.dis = PatchDiscriminator2(n_class=num_speakers)
-            self.dis = PatchDiscriminator3(n_class=num_speakers)
-            self.dis_criterion = GANLoss(use_lsgan=use_lsgan, tensor=torch.cuda.FloatTensor)
+            self.dis1 = PatchDiscriminator1(n_class=num_speakers)
+            self.dis2 = PatchDiscriminator2(n_class=num_speakers)
+            self.dis3 = PatchDiscriminator3(n_class=num_speakers)
+            self.dis1_criterion = GANLoss(use_lsgan=use_lsgan, tensor=torch.cuda.FloatTensor)
+            self.dis2_criterion = GANLoss(use_lsgan=use_lsgan, tensor=torch.cuda.FloatTensor)
+            self.dis3_criterion = GANLoss(use_lsgan=use_lsgan, tensor=torch.cuda.FloatTensor)
         else:
             self.dis = None
 
@@ -1041,23 +1043,54 @@ class Generator(nn.Module):
 
         loss_gen, loss_dis, loss_vocoder = [torch.from_numpy(np.array(0))] * 3
         fake_mel = None
-        if self.dis:
+        if self.dis1:
             # true_label = torch.from_numpy(np.ones(shape=(x.shape[0]))).to('cuda:0').long()
             # false_label = torch.from_numpy(np.zeros(shape=(x.shape[0]))).to('cuda:0').long()
 
             fake_mel = self.conversion(x, device)
 
-            loss_dis = self.dis_criterion(self.dis(x), True) + self.dis_criterion(self.dis(fake_mel), False)
+            loss_dis = self.dis1_criterion(self.dis1(x), True) + self.dis1_criterion(self.dis(fake_mel), False)
                        # +  self.dis_criterion(self.dis(mel_outputs_postnet), False)
 
             self.opt_dis.zero_grad()
             loss_dis.backward(retain_graph=True)
             self.opt_dis.step()
-            loss_gen = self.dis_criterion(self.dis(fake_mel), True)
+            loss_gen = self.dis1_criterion(self.dis1(fake_mel), True)
                 # + self.dis_criterion(self.dis(mel_outputs_postnet), True)
-            loss_dict_discriminator['dis'], loss_dict_discriminator['gen'] = loss_dis.data.item(), loss_gen.data.item()
+            loss_dict_discriminator['dis1'], loss_dict_discriminator['gen'] = loss_dis.data.item(), loss_gen.data.item()
 
+        elif self.dis2:
+            # true_label = torch.from_numpy(np.ones(shape=(x.shape[0]))).to('cuda:0').long()
+            # false_label = torch.from_numpy(np.zeros(shape=(x.shape[0]))).to('cuda:0').long()
 
+            fake_mel = self.conversion(x, device)
+
+            loss_dis = self.dis2_criterion(self.dis2(x), True) + self.dis2_criterion(self.dis2(fake_mel), False)
+                       # +  self.dis_criterion(self.dis(mel_outputs_postnet), False)
+
+            self.opt_dis.zero_grad()
+            loss_dis.backward(retain_graph=True)
+            self.opt_dis.step()
+            loss_gen = self.dis2_criterion(self.dis2(fake_mel), True)
+                # + self.dis_criterion(self.dis(mel_outputs_postnet), True)
+            loss_dict_discriminator['dis2'], loss_dict_discriminator['gen'] = loss_dis.data.item(), loss_gen.data.item() 
+            
+        elif self.dis3:
+            # true_label = torch.from_numpy(np.ones(shape=(x.shape[0]))).to('cuda:0').long()
+            # false_label = torch.from_numpy(np.zeros(shape=(x.shape[0]))).to('cuda:0').long()
+
+            fake_mel = self.conversion(x, device)
+
+            loss_dis = self.dis3_criterion(self.dis3(x), True) + self.dis3_criterion(self.dis3(fake_mel), False)
+                       # +  self.dis_criterion(self.dis(mel_outputs_postnet), False)
+
+            self.opt_dis.zero_grad()
+            loss_dis.backward(retain_graph=True)
+            self.opt_dis.step()
+            loss_gen = self.dis3_criterion(self.dis2(fake_mel), True)
+                # + self.dis_criterion(self.dis(mel_outputs_postnet), True)
+            loss_dict_discriminator['dis3'], loss_dict_discriminator['gen'] = loss_dis.data.item(), loss_gen.data.item()
+            
         if not self.multigpu:
             y_hat = self.vocoder(prev,
                                 self.vocoder.pad_tensor(mel_outputs_postnet, hparams.voc_pad).transpose(1, 2))
